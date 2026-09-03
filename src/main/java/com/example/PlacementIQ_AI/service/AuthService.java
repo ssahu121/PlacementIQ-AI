@@ -38,14 +38,17 @@ public class AuthService {
     public String login(LoginRequest request) {
 
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() ->
-                        new RuntimeException("User Not Found"));
+                .orElse(null);
 
-        if (!passwordEncoder.matches(
+        if(user == null){
+            return "User Not Found";
+        }
+
+        if(!passwordEncoder.matches(
                 request.getPassword(),
-                user.getPassword())) {
-
-            throw new RuntimeException("Invalid Password");
+                user.getPassword()
+        )){
+            return "Invalid Password";
         }
 
         return "Login Successful";
