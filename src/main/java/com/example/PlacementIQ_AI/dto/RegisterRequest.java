@@ -2,6 +2,7 @@ package com.example.PlacementIQ_AI.dto;
 
 import lombok.Data;
 
+
 @Data
 public class RegisterRequest {
 
