@@ -1,6 +1,7 @@
 package com.example.PlacementIQ_AI.service;
 
 import com.example.PlacementIQ_AI.dto.LoginRequest;
+import com.example.PlacementIQ_AI.dto.LoginResponse;
 import com.example.PlacementIQ_AI.dto.RegisterRequest;
 import com.example.PlacementIQ_AI.entity.Role;
 import com.example.PlacementIQ_AI.entity.User;
@@ -32,25 +33,29 @@ public class AuthService {
         userRepository.save(user);
 
         return "User Registered Successfully";
-
-
     }
-    public String login(LoginRequest request) {
+
+    public LoginResponse login(LoginRequest request) {
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElse(null);
 
-        if(user == null){
-            return "User Not Found";
+        if (user == null) {
+            throw new RuntimeException("User Not Found");
         }
 
-        if(!passwordEncoder.matches(
+        if (!passwordEncoder.matches(
                 request.getPassword(),
                 user.getPassword()
-        )){
-            return "Invalid Password";
+        )) {
+            throw new RuntimeException("Invalid Password");
         }
 
-        return "Login Successful";
+        return new LoginResponse(
+                user.getId(),
+                user.getFullName(),
+                user.getEmail(),
+                user.getRole().name()
+        );
     }
 }

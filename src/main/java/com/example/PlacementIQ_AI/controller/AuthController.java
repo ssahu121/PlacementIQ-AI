@@ -1,6 +1,7 @@
 package com.example.PlacementIQ_AI.controller;
 
 import com.example.PlacementIQ_AI.dto.LoginRequest;
+import com.example.PlacementIQ_AI.dto.LoginResponse;
 import com.example.PlacementIQ_AI.dto.RegisterRequest;
 import com.example.PlacementIQ_AI.service.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,7 @@ public class AuthController {
         return "Auth Controller Working";
     }
     @PostMapping("/login")
-    public String login(
+    public LoginResponse login(
             @RequestBody LoginRequest request
     ) {
         return authService.login(request);
