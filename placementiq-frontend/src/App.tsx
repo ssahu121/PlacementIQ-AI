@@ -5,6 +5,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import StudentDashboard from "./pages/StudentDashboard";
 import Profile from "./pages/Profile";
+import AptitudeTest from "./pages/AptitudeTest";
+import SkillAssessment from "./pages/SkillAssessment";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -28,6 +30,8 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/skill-assessment" element={<SkillAssessment />} />
+        <Route path="/aptitude-test" element={<AptitudeTest />} />
       </Routes>
     </BrowserRouter>
   );

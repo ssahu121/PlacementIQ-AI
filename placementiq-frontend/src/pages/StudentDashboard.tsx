@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 function StudentDashboard() {
   const navigate = useNavigate();
@@ -21,7 +22,12 @@ function StudentDashboard() {
           <ul className="nav flex-column flex-grow-1">
             <li className="nav-item mb-3">Dashboard</li>
             <li className="nav-item mb-3">Profile</li>
-            <li className="nav-item mb-3">Skill Assessment</li>
+            <li className="nav-item mb-3"><Link
+              to="/skill-assessment"
+              className="text-white text-decoration-none"
+            >
+              Skill Assessment
+            </Link></li>
             <li className="nav-item mb-3">Aptitude Test</li>
             <li className="nav-item mb-3">Technical Test</li>
             <li className="nav-item mb-3">Coding Round</li>
