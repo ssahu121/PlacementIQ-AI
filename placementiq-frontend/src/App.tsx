@@ -8,6 +8,8 @@ import Profile from "./pages/Profile";
 import AptitudeTest from "./pages/AptitudeTest";
 import SkillAssessment from "./pages/SkillAssessment";
 import ProtectedRoute from "./components/ProtectedRoute";
+import TechnicalTest from "./pages/TechnicalTest";
+import CodingRound from "./pages/CodingRound";
 
 function App() {
   return (
@@ -21,7 +23,6 @@ function App() {
 
         <Route path="/student/dashboard" element={<StudentDashboard />} />
 
-        <Route path="/profile" element={<Profile />} />
         <Route
           path="/student/dashboard"
           element={
@@ -30,8 +31,34 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/skill-assessment" element={<SkillAssessment />} />
         <Route path="/aptitude-test" element={<AptitudeTest />} />
+        <Route
+          path="/technical-test"
+          element={
+            <ProtectedRoute>
+              <TechnicalTest />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/coding-round"
+          element={
+            <ProtectedRoute>
+              <CodingRound />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

@@ -10,30 +10,26 @@ function Login() {
     password: "",
   });
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
 
-  const handleSubmit = async (
-    e: React.FormEvent
-  ) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
       const response = await loginUser(formData);
 
-      alert(response.data);
+      localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem("userId", response.data.id);
+      localStorage.setItem("userName", response.data.fullName);
+      localStorage.setItem("userEmail", response.data.email);
+      localStorage.setItem("userRole", response.data.role);
 
-      if (response.data === "Login Successful") {
-        localStorage.setItem("isLoggedIn", "true");
-
-        navigate("/student/dashboard");
-      }
+      navigate("/student/dashboard");
     } catch (error) {
       alert("Login Failed");
     }
@@ -53,9 +49,7 @@ function Login() {
             >
               <div className="card-body p-5">
                 <div className="text-center mb-4">
-                  <h2 className="fw-bold">
-                    Welcome Back
-                  </h2>
+                  <h2 className="fw-bold">Welcome Back</h2>
 
                   <p className="text-muted">
                     Login to continue your placement journey
@@ -64,9 +58,7 @@ function Login() {
 
                 <form onSubmit={handleSubmit}>
                   <div className="mb-3">
-                    <label className="form-label">
-                      Email
-                    </label>
+                    <label className="form-label">Email</label>
 
                     <input
                       type="email"
@@ -80,9 +72,7 @@ function Login() {
                   </div>
 
                   <div className="mb-4">
-                    <label className="form-label">
-                      Password
-                    </label>
+                    <label className="form-label">Password</label>
 
                     <input
                       type="password"
@@ -95,27 +85,18 @@ function Login() {
                     />
                   </div>
 
-                  <button
-                    type="submit"
-                    className="btn btn-primary w-100"
-                  >
+                  <button type="submit" className="btn btn-primary w-100">
                     Login
                   </button>
                 </form>
 
                 <div className="text-center mt-4">
-                  <span className="text-muted">
-                    Don't have an account?
-                  </span>
+                  <span className="text-muted">Don't have an account?</span>
 
-                  <Link
-                    to="/register"
-                    className="ms-2 text-decoration-none"
-                  >
+                  <Link to="/register" className="ms-2 text-decoration-none">
                     Register
                   </Link>
                 </div>
-
               </div>
             </div>
           </div>
