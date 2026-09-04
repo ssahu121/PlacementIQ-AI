@@ -1,6 +1,44 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { loginUser } from "../api/authApi";
 
 function Login() {
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (
+    e: React.FormEvent
+  ) => {
+    e.preventDefault();
+
+    try {
+      const response = await loginUser(formData);
+
+      alert(response.data);
+
+      if (response.data === "Login Successful") {
+        localStorage.setItem("isLoggedIn", "true");
+
+        navigate("/student/dashboard");
+      }
+    } catch (error) {
+      alert("Login Failed");
+    }
+  };
+
   return (
     <div
       className="min-vh-100 d-flex align-items-center"
@@ -8,15 +46,12 @@ function Login() {
     >
       <div className="container">
         <div className="row justify-content-center">
-
           <div className="col-md-6 col-lg-5">
-
             <div
               className="card border-0 shadow-lg"
               style={{ borderRadius: "20px" }}
             >
               <div className="card-body p-5">
-
                 <div className="text-center mb-4">
                   <h2 className="fw-bold">
                     Welcome Back
@@ -27,8 +62,7 @@ function Login() {
                   </p>
                 </div>
 
-                <form>
-
+                <form onSubmit={handleSubmit}>
                   <div className="mb-3">
                     <label className="form-label">
                       Email
@@ -38,6 +72,10 @@ function Login() {
                       type="email"
                       className="form-control"
                       placeholder="Enter your email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
                     />
                   </div>
 
@@ -50,6 +88,10 @@ function Login() {
                       type="password"
                       className="form-control"
                       placeholder="Enter password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      required
                     />
                   </div>
 
@@ -59,7 +101,6 @@ function Login() {
                   >
                     Login
                   </button>
-
                 </form>
 
                 <div className="text-center mt-4">
@@ -77,9 +118,7 @@ function Login() {
 
               </div>
             </div>
-
           </div>
-
         </div>
       </div>
     </div>
