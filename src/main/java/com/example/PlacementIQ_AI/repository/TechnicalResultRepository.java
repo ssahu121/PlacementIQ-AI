@@ -9,4 +9,6 @@ public interface TechnicalResultRepository
         extends JpaRepository<TechnicalResult, Long> {
 
     Optional<TechnicalResult> findTopByUserIdOrderByIdDesc(Long userId);
+
+    long countByUserId(Long userId);
 }

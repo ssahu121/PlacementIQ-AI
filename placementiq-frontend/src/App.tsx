@@ -10,6 +10,7 @@ import SkillAssessment from "./pages/SkillAssessment";
 import ProtectedRoute from "./components/ProtectedRoute";
 import TechnicalTest from "./pages/TechnicalTest";
 import CodingRound from "./pages/CodingRound";
+import AIInterview from "./pages/AIInterview";
 
 function App() {
   return (
@@ -56,6 +57,15 @@ function App() {
           element={
             <ProtectedRoute>
               <CodingRound />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/ai-interview"
+          element={
+            <ProtectedRoute>
+              <AIInterview />
             </ProtectedRoute>
           }
         />

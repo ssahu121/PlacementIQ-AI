@@ -9,4 +9,6 @@ public interface CodingResultRepository
         extends JpaRepository<CodingResult, Long> {
 
     Optional<CodingResult> findTopByUserIdOrderByIdDesc(Long userId);
+
+    long countByUserId(Long userId);
 }

@@ -9,4 +9,6 @@ public interface AptitudeResultRepository
         extends JpaRepository<AptitudeResult, Long> {
 
     Optional<AptitudeResult> findTopByUserIdOrderByIdDesc(Long userId);
+
+    long countByUserId(Long userId);
 }

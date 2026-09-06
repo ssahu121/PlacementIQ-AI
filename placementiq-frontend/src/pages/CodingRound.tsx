@@ -1,734 +1,1119 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { submitCodingResult } from "../api/codingApi";
+import {
+  runCodingCode,
+  submitCodingResult,
+} from "../api/codingApi";
+import "./CodingRound.css";
+
+interface TestCase {
+  input: string;
+  output: string;
+}
 
 interface CodingQuestion {
   id: number;
   title: string;
+  difficulty: string;
   description: string;
+  examples: TestCase[];
+  starterCode: {
+    java: string;
+    python: string;
+    javascript: string;
+  };
+}
+
+interface RunTestCase {
+  testCaseNumber: number;
+  passed: boolean;
   input: string;
-  output: string;
-  testCases: {
-    input: string;
-    output: string;
-  }[];
+  expectedOutput: string;
+  actualOutput: string;
+}
+
+interface RunResult {
+  success: boolean;
+  allPassed: boolean;
+  message: string;
+  testCases: RunTestCase[];
 }
 
 const QUESTIONS: CodingQuestion[] = [
   {
     id: 1,
-    title: "Reverse a String",
-    description: "Write a program to reverse the given string.",
-    input: "hello",
-    output: "olleh",
-    testCases: [
-      { input: "hello", output: "olleh" },
-      { input: "java", output: "avaj" },
+    title: "Two Sum",
+    difficulty: "Easy",
+    description:
+      "Given an integer array nums and an integer target, return the indices of two numbers such that they add up to target.",
+    examples: [
+      {
+        input: "nums = [2, 7, 11, 15], target = 9",
+        output: "[0, 1]",
+      },
+      {
+        input: "nums = [3, 2, 4], target = 6",
+        output: "[1, 2]",
+      },
     ],
+    starterCode: {
+      java: `class Solution {
+    public int[] twoSum(int[] nums, int target) {
+        // Write your code here
+        
+        return new int[]{};
+    }
+}`,
+      python: `class Solution:
+    def twoSum(self, nums, target):
+        # Write your code here
+        
+        return []`,
+      javascript: `function twoSum(nums, target) {
+    // Write your code here
+    
+    return [];
+}
+
+module.exports = twoSum;`,
+    },
   },
+
   {
     id: 2,
-    title: "Check Palindrome",
-    description: "Check whether the given string is a palindrome.",
-    input: "madam",
-    output: "true",
-    testCases: [
-      { input: "madam", output: "true" },
-      { input: "hello", output: "false" },
-    ],
-  },
-  {
-    id: 3,
-    title: "Find Maximum Number",
-    description: "Find the maximum element from an integer array.",
-    input: "[10, 25, 7, 40, 15]",
-    output: "40",
-    testCases: [
-      { input: "[10,25,7,40,15]", output: "40" },
-      { input: "[5,2,9,1]", output: "9" },
-    ],
-  },
-  {
-    id: 4,
-    title: "Find Minimum Number",
-    description: "Find the minimum element from an integer array.",
-    input: "[10, 25, 7, 40, 15]",
-    output: "7",
-    testCases: [
-      { input: "[10,25,7,40,15]", output: "7" },
-      { input: "[5,2,9,1]", output: "1" },
-    ],
-  },
-  {
-    id: 5,
-    title: "Sum of Array",
-    description: "Calculate the sum of all elements in an integer array.",
-    input: "[1, 2, 3, 4, 5]",
-    output: "15",
-    testCases: [
-      { input: "[1,2,3,4,5]", output: "15" },
-      { input: "[10,20,30]", output: "60" },
-    ],
-  },
-  {
-    id: 6,
-    title: "Count Vowels",
-    description: "Count the number of vowels in the given string.",
-    input: "placement",
-    output: "3",
-    testCases: [
-      { input: "placement", output: "3" },
-      { input: "hello", output: "2" },
-    ],
-  },
-  {
-    id: 7,
-    title: "Factorial",
-    description: "Find the factorial of a given positive integer.",
-    input: "5",
-    output: "120",
-    testCases: [
-      { input: "5", output: "120" },
-      { input: "6", output: "720" },
-    ],
-  },
-  {
-    id: 8,
-    title: "Fibonacci Series",
-    description: "Print the first N Fibonacci numbers.",
-    input: "5",
-    output: "0 1 1 2 3",
-    testCases: [
-      { input: "5", output: "0 1 1 2 3" },
-      { input: "7", output: "0 1 1 2 3 5 8" },
-    ],
-  },
-  {
-    id: 9,
-    title: "Prime Number",
-    description: "Check whether a given number is prime.",
-    input: "17",
-    output: "true",
-    testCases: [
-      { input: "17", output: "true" },
-      { input: "20", output: "false" },
-    ],
-  },
-  {
-    id: 10,
-    title: "Even or Odd",
-    description: "Check whether the given number is even or odd.",
-    input: "12",
-    output: "even",
-    testCases: [
-      { input: "12", output: "even" },
-      { input: "7", output: "odd" },
-    ],
-  },
-  {
-    id: 11,
-    title: "Count Digits",
-    description: "Count the number of digits in a positive integer.",
-    input: "12345",
-    output: "5",
-    testCases: [
-      { input: "12345", output: "5" },
-      { input: "987", output: "3" },
-    ],
-  },
-  {
-    id: 12,
-    title: "Reverse Number",
-    description: "Reverse the digits of a given number.",
-    input: "12345",
-    output: "54321",
-    testCases: [
-      { input: "12345", output: "54321" },
-      { input: "120", output: "21" },
-    ],
-  },
-  {
-    id: 13,
-    title: "Second Largest",
-    description: "Find the second largest element in an integer array.",
-    input: "[10, 5, 20, 8, 15]",
-    output: "15",
-    testCases: [
-      { input: "[10,5,20,8,15]", output: "15" },
-      { input: "[5,1,9,7]", output: "7" },
-    ],
-  },
-  {
-    id: 14,
-    title: "Remove Duplicates",
-    description: "Remove duplicate values from an integer array.",
-    input: "[1,2,2,3,3,4]",
-    output: "[1,2,3,4]",
-    testCases: [
-      { input: "[1,2,2,3,3,4]", output: "[1,2,3,4]" },
-      { input: "[5,5,6,7,7]", output: "[5,6,7]" },
-    ],
-  },
-  {
-    id: 15,
-    title: "Character Frequency",
-    description: "Find the frequency of a given character in a string.",
-    input: "programming, m",
-    output: "2",
-    testCases: [
-      { input: "programming, m", output: "2" },
-      { input: "hello, l", output: "2" },
-    ],
-  },
-  {
-    id: 16,
-    title: "Anagram Check",
-    description: "Check whether two strings are anagrams.",
-    input: "listen, silent",
-    output: "true",
-    testCases: [
-      { input: "listen, silent", output: "true" },
-      { input: "hello, world", output: "false" },
-    ],
-  },
-  {
-    id: 17,
-    title: "Binary Search",
-    description: "Search for a target element in a sorted integer array.",
-    input: "[1,3,5,7,9], target=7",
-    output: "3",
-    testCases: [
-      { input: "[1,3,5,7,9], target=7", output: "3" },
-      { input: "[2,4,6,8], target=5", output: "-1" },
-    ],
-  },
-  {
-    id: 18,
-    title: "Array Rotation",
-    description: "Rotate an array to the right by one position.",
-    input: "[1,2,3,4,5]",
-    output: "[5,1,2,3,4]",
-    testCases: [
-      { input: "[1,2,3,4,5]", output: "[5,1,2,3,4]" },
-      { input: "[10,20,30]", output: "[30,10,20]" },
-    ],
-  },
-  {
-    id: 19,
-    title: "GCD of Two Numbers",
-    description: "Find the greatest common divisor of two numbers.",
-    input: "48, 18",
-    output: "6",
-    testCases: [
-      { input: "48,18", output: "6" },
-      { input: "20,30", output: "10" },
-    ],
-  },
-  {
-    id: 20,
-    title: "Missing Number",
+    title: "Valid Parentheses",
+    difficulty: "Easy",
     description:
-      "Find the missing number from an array containing numbers from 1 to N.",
-    input: "[1,2,3,5,6]",
-    output: "4",
-    testCases: [
-      { input: "[1,2,3,5,6]", output: "4" },
-      { input: "[1,2,4,5]", output: "3" },
+      "Given a string containing brackets, determine whether the brackets are valid and properly closed.",
+    examples: [
+      {
+        input: 's = "()[]{}"',
+        output: "true",
+      },
+      {
+        input: 's = "(]"',
+        output: "false",
+      },
     ],
+    starterCode: {
+      java: `class Solution {
+    public boolean isValid(String s) {
+        // Write your code here
+        
+        return false;
+    }
+}`,
+      python: `class Solution:
+    def isValid(self, s):
+        # Write your code here
+        
+        return False`,
+      javascript: `function isValid(s) {
+    // Write your code here
+    
+    return false;
+}
+
+module.exports = isValid;`,
+    },
   },
 ];
 
 const TEST_DURATION = 30 * 60;
-const PASS_PERCENTAGE = 60;
 
 function CodingRound() {
   const navigate = useNavigate();
 
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [marked, setMarked] = useState<number[]>([]);
-  const [timeLeft, setTimeLeft] = useState(TEST_DURATION);
-  const [submitted, setSubmitted] = useState(false);
-  const [score, setScore] = useState(0);
-  const [passed, setPassed] = useState(false);
+  const [currentQuestion, setCurrentQuestion] =
+    useState(0);
 
-  const question = QUESTIONS[currentQuestion];
+  const [language, setLanguage] =
+    useState("java");
 
-  const attempted = Object.keys(answers).length;
+  const [codes, setCodes] =
+    useState<Record<number, string>>({
+      1: QUESTIONS[0].starterCode.java,
+      2: QUESTIONS[1].starterCode.java,
+    });
 
-  const percentage = useMemo(() => {
-    return Math.round((score / QUESTIONS.length) * 100);
-  }, [score]);
+  const [timeLeft, setTimeLeft] =
+    useState(TEST_DURATION);
+
+  const [runResult, setRunResult] =
+    useState<RunResult | null>(null);
+
+  const [isRunning, setIsRunning] =
+    useState(false);
+
+  const [submitted, setSubmitted] =
+    useState(false);
+
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
+
+  const [questionResults, setQuestionResults] =
+    useState<Record<number, boolean>>({});
+
+  const question =
+    QUESTIONS[currentQuestion];
+
+  const currentCode =
+    codes[question.id] || "";
+
+  const attempted =
+    Object.values(codes).filter(
+      (code) =>
+        code.trim() !== "" &&
+        !code.includes("Write your code here")
+    ).length;
+
+  const score = useMemo(() => {
+    return Object.values(questionResults)
+      .filter(Boolean)
+      .length;
+  }, [questionResults]);
+
+  const percentage =
+    Math.round(
+      (score / QUESTIONS.length) * 100
+    );
+
+  const passed =
+    percentage >= 50;
+
+  // =========================================================
+  // TIMER
+  // =========================================================
 
   useEffect(() => {
     if (submitted) {
       return;
     }
 
-    if (timeLeft <= 0) {
+    const timer =
+      window.setInterval(() => {
+        setTimeLeft((previous) => {
+          if (previous <= 1) {
+            window.clearInterval(timer);
+            return 0;
+          }
+
+          return previous - 1;
+        });
+      }, 1000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [submitted]);
+
+  // =========================================================
+  // AUTO SUBMIT WHEN TIME ENDS
+  // =========================================================
+
+  useEffect(() => {
+    if (
+      timeLeft === 0 &&
+      !submitted &&
+      !isSubmitting
+    ) {
       handleSubmit(true);
+    }
+  }, [timeLeft]);
+
+  // =========================================================
+  // FORMAT TIMER
+  // =========================================================
+
+  const formatTime = (
+    seconds: number
+  ) => {
+    const minutes =
+      Math.floor(seconds / 60);
+
+    const secondsRemaining =
+      seconds % 60;
+
+    return `${minutes
+      .toString()
+      .padStart(2, "0")}:${secondsRemaining
+      .toString()
+      .padStart(2, "0")}`;
+  };
+
+  // =========================================================
+  // GET STARTER CODE
+  // =========================================================
+
+  const getStarterCodeForLanguage = (
+    q: CodingQuestion,
+    selectedLanguage: string
+  ) => {
+    if (
+      selectedLanguage === "python"
+    ) {
+      return q.starterCode.python;
+    }
+
+    if (
+      selectedLanguage === "javascript"
+    ) {
+      return q.starterCode.javascript;
+    }
+
+    return q.starterCode.java;
+  };
+
+  // =========================================================
+  // CHANGE LANGUAGE
+  // =========================================================
+
+  const changeLanguage = (
+    newLanguage: string
+  ) => {
+    setLanguage(newLanguage);
+
+    setCodes((previous) => {
+      const current =
+        previous[question.id] || "";
+
+      const isDefaultCode =
+        current.includes(
+          "Write your code here"
+        );
+
+      if (!isDefaultCode) {
+        return previous;
+      }
+
+      return {
+        ...previous,
+        [question.id]:
+          getStarterCodeForLanguage(
+            question,
+            newLanguage
+          ),
+      };
+    });
+
+    setRunResult(null);
+  };
+
+  // =========================================================
+  // UPDATE CODE
+  // =========================================================
+
+  const updateCode = (
+    value: string
+  ) => {
+    setCodes((previous) => ({
+      ...previous,
+      [question.id]: value,
+    }));
+
+    setRunResult(null);
+  };
+
+  // =========================================================
+  // RUN CODE
+  // =========================================================
+
+  const runCode = async () => {
+    if (
+      !currentCode.trim() ||
+      currentCode.includes(
+        "Write your code here"
+      )
+    ) {
+      alert(
+        "Please write your code first."
+      );
+
       return;
     }
 
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
-    }, 1000);
+    setIsRunning(true);
+    setRunResult(null);
 
-    return () => clearInterval(timer);
-  }, [timeLeft, submitted]);
+    try {
+      const response =
+        await runCodingCode({
+          questionId: question.id,
+          language,
+          code: currentCode,
 
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
+          testCases:
+            question.examples.map(
+              (testCase) => ({
+                input:
+                  testCase.input,
 
-    return `${String(minutes).padStart(2, "0")}:${String(
-      remainingSeconds
-    ).padStart(2, "0")}`;
-  };
+                expectedOutput:
+                  testCase.output,
+              })
+            ),
+        });
 
-  const handleCodeChange = (value: string) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [question.id]: value,
-    }));
-  };
+      const data =
+        response?.data || {};
 
-  const toggleMark = () => {
-    setMarked((prev) =>
-      prev.includes(question.id)
-        ? prev.filter((id) => id !== question.id)
-        : [...prev, question.id]
-    );
-  };
+      // IMPORTANT:
+      // Always make testCases an array.
+      // This prevents the white-screen error.
 
-  const evaluateAnswer = (answer: string, q: CodingQuestion) => {
-    if (!answer.trim()) {
-      return false;
+      const safeResult: RunResult = {
+        success:
+          data.success ?? false,
+
+        allPassed:
+          data.allPassed ?? false,
+
+        message:
+          data.message ??
+          "Code execution completed.",
+
+        testCases:
+          Array.isArray(
+            data.testCases
+          )
+            ? data.testCases
+            : [],
+      };
+
+      setRunResult(safeResult);
+
+      // -------------------------------------------------------
+      // SAVE QUESTION RESULT
+      // -------------------------------------------------------
+
+      setQuestionResults(
+        (previous) => ({
+          ...previous,
+          [question.id]:
+            safeResult.allPassed,
+        })
+      );
+
+    } catch (error) {
+      console.error(
+        "Code execution failed:",
+        error
+      );
+
+      setRunResult({
+        success: false,
+        allPassed: false,
+        message:
+          "Unable to execute code. Check backend/server.",
+        testCases: [],
+      });
+
+      setQuestionResults(
+        (previous) => ({
+          ...previous,
+          [question.id]: false,
+        })
+      );
+    } finally {
+      setIsRunning(false);
     }
-
-    const normalizedAnswer = answer
-      .toLowerCase()
-      .replace(/\s+/g, "")
-      .replace(/;/g, "");
-
-    const keywords: Record<number, string[]> = {
-      1: ["reverse"],
-      2: ["palindrome"],
-      3: ["max", "maximum"],
-      4: ["min", "minimum"],
-      5: ["sum"],
-      6: ["vowel"],
-      7: ["factorial"],
-      8: ["fibonacci"],
-      9: ["prime"],
-      10: ["even", "odd"],
-      11: ["digit"],
-      12: ["reverse"],
-      13: ["secondlargest"],
-      14: ["duplicate"],
-      15: ["frequency", "count"],
-      16: ["anagram"],
-      17: ["binarysearch"],
-      18: ["rotate", "rotation"],
-      19: ["gcd", "greatestcommon"],
-      20: ["missing"],
-    };
-
-    const matchedKeyword = keywords[q.id]?.some((keyword) =>
-      normalizedAnswer.includes(keyword)
-    );
-
-    return Boolean(matchedKeyword);
   };
 
-  const handleSubmit = async (autoSubmit = false) => {
-    if (submitted) {
+  // =========================================================
+  // SUBMIT CODING ROUND
+  // =========================================================
+
+  const handleSubmit = async (
+    autoSubmit = false
+  ) => {
+    if (
+      submitted ||
+      isSubmitting
+    ) {
       return;
     }
 
     if (!autoSubmit) {
-      const confirmed = window.confirm(
-        `You have attempted ${attempted} of ${QUESTIONS.length} questions.\n\nAre you sure you want to submit the Coding Round?`
-      );
+      const confirmed =
+        window.confirm(
+          `You have attempted ${attempted} of ${QUESTIONS.length} questions.\n\nSubmit Coding Round?`
+        );
 
       if (!confirmed) {
         return;
       }
     }
 
-    let calculatedScore = 0;
-
-    QUESTIONS.forEach((q) => {
-      if (evaluateAnswer(answers[q.id] || "", q)) {
-        calculatedScore++;
-      }
-    });
-
-    const calculatedPercentage = Math.round(
-      (calculatedScore / QUESTIONS.length) * 100
-    );
-
-    const calculatedPassed = calculatedPercentage >= PASS_PERCENTAGE;
-
-    const userId = Number(localStorage.getItem("userId"));
+    const userId =
+      Number(
+        localStorage.getItem(
+          "userId"
+        )
+      );
 
     if (!userId) {
-      alert("User session not found. Please login again.");
+      alert(
+        "User session not found. Please login again."
+      );
+
       return;
     }
+
+    setIsSubmitting(true);
 
     try {
       await submitCodingResult({
         userId,
-        score: calculatedScore,
-        totalQuestions: QUESTIONS.length,
-        percentage: calculatedPercentage,
-        passed: calculatedPassed,
-      });
 
-      setScore(calculatedScore);
-      setPassed(calculatedPassed);
-      setSubmitted(true);
+        score,
+
+        totalQuestions:
+          QUESTIONS.length,
+
+        percentage,
+
+        passed,
+      });
 
       localStorage.setItem(
         "codingResult",
         JSON.stringify({
-          score: calculatedScore,
-          totalQuestions: QUESTIONS.length,
-          percentage: calculatedPercentage,
-          passed: calculatedPassed,
+          score,
+
+          totalQuestions:
+            QUESTIONS.length,
+
+          percentage,
+
+          passed,
         })
       );
 
-      if (calculatedPassed) {
-        localStorage.setItem("aiInterviewUnlocked", "true");
+      if (passed) {
+        localStorage.setItem(
+          "interviewUnlocked",
+          "true"
+        );
+      } else {
+        localStorage.removeItem(
+          "interviewUnlocked"
+        );
       }
+
+      setSubmitted(true);
+
     } catch (error) {
-      console.error("Coding result submission failed:", error);
-      alert("Failed to save your Coding result. Please try again.");
+      console.error(
+        "Coding submission failed:",
+        error
+      );
+
+      alert(
+        "Failed to save coding result."
+      );
+
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const retryTest = () => {
+  // =========================================================
+  // RETRY
+  // =========================================================
+
+  const retry = () => {
     setCurrentQuestion(0);
-    setAnswers({});
-    setMarked([]);
-    setTimeLeft(TEST_DURATION);
+
+    setLanguage("java");
+
+    setCodes({
+      1: QUESTIONS[0]
+        .starterCode.java,
+
+      2: QUESTIONS[1]
+        .starterCode.java,
+    });
+
+    setTimeLeft(
+      TEST_DURATION
+    );
+
+    setRunResult(null);
+
+    setQuestionResults({});
+
     setSubmitted(false);
-    setScore(0);
-    setPassed(false);
   };
+
+  // =========================================================
+  // RESULT SCREEN
+  // =========================================================
 
   if (submitted) {
     return (
-      <div className="container py-5">
-        <div className="card shadow-lg border-0">
-          <div className="card-body text-center p-5">
-            <div className="mb-4">
-              <i
-                className={`bi ${
-                  passed
-                    ? "bi-check-circle-fill text-success"
-                    : "bi-x-circle-fill text-danger"
-                }`}
-                style={{ fontSize: "70px" }}
-              ></i>
-            </div>
+      <div className="coding-result-page">
 
-            <h2 className="fw-bold mb-3">Coding Round Result</h2>
+        <div className="coding-result-card">
 
-            <h1 className="display-4 fw-bold mb-3">
-              {score}/{QUESTIONS.length}
-            </h1>
-
-            <h4 className="mb-4">
-              Score: {percentage}%
-            </h4>
-
-            {passed ? (
-              <>
-                <div className="alert alert-success">
-                  <strong>Congratulations!</strong>
-                  <br />
-                  You passed the Coding Round.
-                  <br />
-                  AI Interview is now unlocked.
-                </div>
-
-                <button
-                  className="btn btn-success px-4"
-                  onClick={() => navigate("/ai-interview")}
-                >
-                  Continue to AI Interview
-                  <i className="bi bi-arrow-right ms-2"></i>
-                </button>
-              </>
-            ) : (
-              <>
-                <div className="alert alert-danger">
-                  <strong>Not Passed</strong>
-                  <br />
-                  You need at least {PASS_PERCENTAGE}% to unlock the AI
-                  Interview.
-                </div>
-
-                <button
-                  className="btn btn-primary px-4"
-                  onClick={retryTest}
-                >
-                  Retry Coding Round
-                  <i className="bi bi-arrow-repeat ms-2"></i>
-                </button>
-              </>
-            )}
+          <div className="result-icon">
+            {passed ? "✓" : "!"}
           </div>
+
+          <h1>
+            {passed
+              ? "Coding Round Passed"
+              : "Coding Round Not Cleared"}
+          </h1>
+
+          <div className="result-score">
+            {score} /{" "}
+            {QUESTIONS.length}
+          </div>
+
+          <p className="result-percentage">
+            {percentage}%
+          </p>
+
+          <p className="result-message">
+            {passed
+              ? "Great job! You have unlocked the AI Mock Interview."
+              : "You need at least 1 correct question out of 2 to pass."}
+          </p>
+
+          <div className="result-buttons">
+
+            <button
+              className="secondary-btn"
+              onClick={retry}
+            >
+              Retry
+            </button>
+
+            {passed && (
+              <button
+                className="primary-btn"
+                onClick={() =>
+                  navigate(
+                    "/ai-interview"
+                  )
+                }
+              >
+                Continue to AI Interview →
+              </button>
+            )}
+
+            <button
+              className="secondary-btn"
+              onClick={() =>
+                navigate(
+                  "/student/dashboard"
+                )
+              }
+            >
+              Dashboard
+            </button>
+
+          </div>
+
         </div>
+
       </div>
     );
   }
 
+  // =========================================================
+  // MAIN CODING PAGE
+  // =========================================================
+
   return (
-    <div className="container-fluid py-4">
-      <div className="container">
-        {/* Header */}
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <div>
-            <h2 className="fw-bold mb-1">Coding Round</h2>
-            <p className="text-muted mb-0">
-              Solve the coding problems and submit your solutions.
-            </p>
-          </div>
+    <div className="coding-page">
 
-          <div className="text-end">
-            <div className="text-muted small">Time Remaining</div>
-            <h4 className="fw-bold text-danger mb-0">
-              <i className="bi bi-clock me-2"></i>
-              {formatTime(timeLeft)}
-            </h4>
-          </div>
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
+
+      <header className="coding-header">
+
+        <div className="coding-logo">
+          PlacementIQ
+          <span> Coding</span>
         </div>
 
-        {/* Progress */}
-        <div className="card border-0 shadow-sm mb-4">
-          <div className="card-body">
-            <div className="d-flex justify-content-between mb-2">
-              <span className="fw-semibold">
-                Question {currentQuestion + 1} of {QUESTIONS.length}
-              </span>
-
-              <span className="text-muted">
-                Attempted {attempted}/{QUESTIONS.length}
-              </span>
-            </div>
-
-            <div className="progress" style={{ height: "8px" }}>
-              <div
-                className="progress-bar"
-                style={{
-                  width: `${
-                    ((currentQuestion + 1) / QUESTIONS.length) * 100
-                  }%`,
-                }}
-              ></div>
-            </div>
-          </div>
+        <div className="coding-title">
+          {question.title}
         </div>
 
-        <div className="row g-4">
-          {/* Question */}
-          <div className="col-lg-8">
-            <div className="card border-0 shadow-sm">
-              <div className="card-body p-4">
-                <div className="d-flex justify-content-between align-items-start mb-3">
-                  <div>
-                    <span className="badge bg-primary mb-2">
-                      Problem {question.id}
-                    </span>
+        <div
+          className={`coding-timer ${
+            timeLeft <= 300
+              ? "danger"
+              : ""
+          }`}
+        >
+          ⏱ {formatTime(timeLeft)}
+        </div>
 
-                    <h4 className="fw-bold">{question.title}</h4>
-                  </div>
+      </header>
 
-                  <button
-                    className={`btn ${
-                      marked.includes(question.id)
-                        ? "btn-warning"
-                        : "btn-outline-warning"
-                    }`}
-                    onClick={toggleMark}
-                  >
-                    <i className="bi bi-bookmark me-1"></i>
-                    {marked.includes(question.id)
-                      ? "Marked"
-                      : "Mark"}
-                  </button>
-                </div>
+      {/* =====================================================
+          MAIN
+      ===================================================== */}
 
-                <p className="mb-4">{question.description}</p>
+      <div className="coding-main">
 
-                <div className="row g-3 mb-4">
-                  <div className="col-md-6">
-                    <div className="bg-light rounded p-3">
-                      <h6 className="fw-bold">Sample Input</h6>
-                      <code>{question.input}</code>
-                    </div>
-                  </div>
+        {/* ===================================================
+            LEFT QUESTION PANEL
+        =================================================== */}
 
-                  <div className="col-md-6">
-                    <div className="bg-light rounded p-3">
-                      <h6 className="fw-bold">Expected Output</h6>
-                      <code>{question.output}</code>
-                    </div>
-                  </div>
-                </div>
+        <aside className="question-panel">
 
-                <h6 className="fw-bold mb-2">
-                  Write Your Solution
-                </h6>
+          <div className="question-tabs">
 
-                <textarea
-                  className="form-control"
-                  rows={14}
-                  value={answers[question.id] || ""}
-                  onChange={(e) => handleCodeChange(e.target.value)}
-                  placeholder={`// Write your solution here...
-
-Example:
-public static void main(String[] args) {
-    // your code
-}`}
-                  style={{
-                    fontFamily: "monospace",
-                    fontSize: "14px",
-                    backgroundColor: "#111827",
-                    color: "#f9fafb",
-                  }}
-                />
-
-                <div className="d-flex justify-content-between mt-4">
-                  <button
-                    className="btn btn-outline-secondary"
-                    disabled={currentQuestion === 0}
-                    onClick={() =>
-                      setCurrentQuestion((prev) => prev - 1)
-                    }
-                  >
-                    <i className="bi bi-arrow-left me-2"></i>
-                    Previous
-                  </button>
-
-                  {currentQuestion < QUESTIONS.length - 1 ? (
-                    <button
-                      className="btn btn-primary"
-                      onClick={() =>
-                        setCurrentQuestion((prev) => prev + 1)
-                      }
-                    >
-                      Next
-                      <i className="bi bi-arrow-right ms-2"></i>
-                    </button>
-                  ) : (
-                    <button
-                      className="btn btn-success"
-                      onClick={() => handleSubmit()}
-                    >
-                      Submit Coding Round
-                      <i className="bi bi-check-lg ms-2"></i>
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Question Palette */}
-          <div className="col-lg-4">
-            <div className="card border-0 shadow-sm">
-              <div className="card-body">
-                <h5 className="fw-bold mb-3">Question Palette</h5>
-
-                <div className="d-flex flex-wrap gap-2">
-                  {QUESTIONS.map((q, index) => {
-                    const isAnswered = Boolean(answers[q.id]);
-                    const isMarked = marked.includes(q.id);
-                    const isCurrent = index === currentQuestion;
-
-                    return (
-                      <button
-                        key={q.id}
-                        className={`btn ${
-                          isCurrent
-                            ? "btn-primary"
-                            : isAnswered
-                            ? "btn-success"
-                            : isMarked
-                            ? "btn-warning"
-                            : "btn-outline-secondary"
-                        }`}
-                        style={{
-                          width: "44px",
-                          height: "44px",
-                        }}
-                        onClick={() => setCurrentQuestion(index)}
-                      >
-                        {index + 1}
-                      </button>
+            {QUESTIONS.map(
+              (q, index) => (
+                <button
+                  key={q.id}
+                  className={
+                    index ===
+                    currentQuestion
+                      ? "question-tab active"
+                      : "question-tab"
+                  }
+                  onClick={() => {
+                    setCurrentQuestion(
+                      index
                     );
-                  })}
-                </div>
 
-                <hr />
+                    setRunResult(null);
+                  }}
+                >
+                  {index + 1}
 
-                <div className="small">
-                  <div className="mb-2">
-                    <span className="badge bg-primary me-2">
-                      &nbsp;
+                  {questionResults[
+                    q.id
+                  ] && (
+                    <span className="small-check">
+                      ✓
                     </span>
-                    Current
-                  </div>
+                  )}
+                </button>
+              )
+            )}
 
-                  <div className="mb-2">
-                    <span className="badge bg-success me-2">
-                      &nbsp;
-                    </span>
-                    Answered
-                  </div>
+          </div>
 
-                  <div className="mb-2">
-                    <span className="badge bg-warning me-2">
-                      &nbsp;
-                    </span>
-                    Marked
-                  </div>
+          <div className="question-content">
+
+            <div className="question-heading">
+
+              <h1>
+                {question.id}.{" "}
+                {question.title}
+              </h1>
+
+              <span className="easy-badge">
+                {question.difficulty}
+              </span>
+
+            </div>
+
+            <p className="question-description">
+              {question.description}
+            </p>
+
+            <h3>
+              Examples
+            </h3>
+
+            {question.examples.map(
+              (example, index) => (
+                <div
+                  className="example-box"
+                  key={index}
+                >
 
                   <div>
-                    <span className="badge bg-secondary me-2">
-                      &nbsp;
-                    </span>
-                    Not Attempted
+                    <strong>
+                      Example{" "}
+                      {index + 1}
+                    </strong>
                   </div>
-                </div>
 
-                <hr />
+                  <pre>
+                    Input:{" "}
+                    {example.input}
+                    {"\n"}
+                    Output:{" "}
+                    {example.output}
+                  </pre>
 
-                <div className="alert alert-info mb-0">
-                  <strong>Passing Criteria:</strong>
-                  <br />
-                  Minimum {PASS_PERCENTAGE}% required to unlock the
-                  AI Interview.
                 </div>
+              )
+            )}
+
+            <div className="question-info">
+
+              <div>
+                <strong>
+                  Difficulty
+                </strong>
+
+                <span>
+                  Easy
+                </span>
               </div>
+
+              <div>
+                <strong>
+                  Questions
+                </strong>
+
+                <span>
+                  2
+                </span>
+              </div>
+
+              <div>
+                <strong>
+                  Passing
+                </strong>
+
+                <span>
+                  1 / 2
+                </span>
+              </div>
+
             </div>
+
+          </div>
+
+        </aside>
+
+        {/* ===================================================
+            RIGHT EDITOR
+        =================================================== */}
+
+        <section className="editor-panel">
+
+          {/* EDITOR TOPBAR */}
+
+          <div className="editor-topbar">
+
+            <select
+              value={language}
+              onChange={(e) =>
+                changeLanguage(
+                  e.target.value
+                )
+              }
+              className="language-select"
+            >
+
+              <option value="java">
+                Java
+              </option>
+
+              <option value="python">
+                Python
+              </option>
+
+              <option value="javascript">
+                JavaScript
+              </option>
+
+            </select>
+
+            <span className="editor-label">
+              Language
+            </span>
+
+          </div>
+
+          {/* CODE EDITOR */}
+
+          <textarea
+            className="code-editor"
+            value={currentCode}
+            onChange={(e) =>
+              updateCode(
+                e.target.value
+              )
+            }
+            spellCheck={false}
+          />
+
+          {/* =================================================
+              ACTION BUTTONS
+          ================================================= */}
+
+          <div className="editor-actions">
 
             <button
-              className="btn btn-danger w-100 mt-3"
-              onClick={() => handleSubmit()}
+              className="run-btn"
+              onClick={runCode}
+              disabled={isRunning}
             >
-              <i className="bi bi-send me-2"></i>
-              Submit Test
+              {isRunning
+                ? "⏳ Running..."
+                : "▶ Run Code"}
             </button>
+
+            <button
+              className="submit-btn"
+              onClick={() =>
+                handleSubmit(false)
+              }
+              disabled={isSubmitting}
+            >
+              {isSubmitting
+                ? "Submitting..."
+                : "Submit"}
+            </button>
+
           </div>
-        </div>
+
+          {/* =================================================
+              TEST PANEL
+          ================================================= */}
+
+          <div className="test-panel">
+
+            <div className="test-panel-header">
+
+              <h3>
+                Test Cases
+              </h3>
+
+              {runResult && (
+                <span
+                  className={
+                    runResult.allPassed
+                      ? "all-passed"
+                      : "some-failed"
+                  }
+                >
+                  {runResult.allPassed
+                    ? "✓ All Passed"
+                    : "✕ Failed"}
+                </span>
+              )}
+
+            </div>
+
+            {/* NO RESULT */}
+
+            {!runResult && (
+              <div className="empty-tests">
+
+                <div className="play-icon">
+                  ▶
+                </div>
+
+                <p>
+                  Run your code to test
+                  against the examples.
+                </p>
+
+              </div>
+            )}
+
+            {/* RESULT */}
+
+            {runResult && (
+              <div>
+
+                {/* EXECUTION ERROR */}
+
+                {!runResult.success && (
+                  <div className="execution-error">
+
+                    <strong>
+                      Execution Error
+                    </strong>
+
+                    <pre>
+                      {runResult.message}
+                    </pre>
+
+                  </div>
+                )}
+
+                {/* MESSAGE */}
+
+                {runResult.success &&
+                  runResult.message && (
+                    <div className="run-message">
+                      {runResult.message}
+                    </div>
+                  )}
+
+                {/* TEST CASES */}
+
+                {(
+                  runResult.testCases ||
+                  []
+                ).map(
+                  (testCase) => (
+
+                    <div
+                      className={
+                        testCase.passed
+                          ? "test-case passed"
+                          : "test-case failed"
+                      }
+                      key={
+                        testCase.testCaseNumber
+                      }
+                    >
+
+                      <div className="test-case-header">
+
+                        <span>
+                          {testCase.passed
+                            ? "✓"
+                            : "✕"}
+                        </span>
+
+                        <strong>
+                          Test Case{" "}
+                          {
+                            testCase.testCaseNumber
+                          }
+                        </strong>
+
+                        <span>
+                          {testCase.passed
+                            ? "Passed"
+                            : "Failed"}
+                        </span>
+
+                      </div>
+
+                      <div className="output-grid">
+
+                        <div>
+
+                          <label>
+                            Input
+                          </label>
+
+                          <pre>
+                            {
+                              testCase.input
+                            }
+                          </pre>
+
+                        </div>
+
+                        <div>
+
+                          <label>
+                            Expected
+                          </label>
+
+                          <pre>
+                            {
+                              testCase.expectedOutput
+                            }
+                          </pre>
+
+                        </div>
+
+                        <div>
+
+                          <label>
+                            Your Output
+                          </label>
+
+                          <pre>
+                            {
+                              testCase.actualOutput
+                            }
+                          </pre>
+
+                        </div>
+
+                      </div>
+
+                    </div>
+                  )
+                )}
+
+              </div>
+            )}
+
+          </div>
+
+        </section>
+
       </div>
+
+      {/* =====================================================
+          FOOTER
+      ===================================================== */}
+
+      <footer className="coding-footer">
+
+        <button
+          className="nav-btn"
+          disabled={
+            currentQuestion === 0
+          }
+          onClick={() => {
+
+            setCurrentQuestion(
+              (previous) =>
+                previous - 1
+            );
+
+            setRunResult(null);
+          }}
+        >
+          ← Previous
+        </button>
+
+        <div className="footer-status">
+
+          Question{" "}
+          {currentQuestion + 1}
+          {" / "}
+          {QUESTIONS.length}
+
+        </div>
+
+        {currentQuestion <
+        QUESTIONS.length - 1 ? (
+
+          <button
+            className="nav-btn next"
+            onClick={() => {
+
+              setCurrentQuestion(
+                (previous) =>
+                  previous + 1
+              );
+
+              setRunResult(null);
+            }}
+          >
+            Next →
+          </button>
+
+        ) : (
+
+          <button
+            className="nav-btn submit-final"
+            onClick={() =>
+              handleSubmit(false)
+            }
+          >
+            Submit Test
+          </button>
+
+        )}
+
+      </footer>
+
     </div>
   );
 }
